@@ -242,7 +242,8 @@ __global__ void forward_texture_sampling_cuda_kernel(
 }
 
 template <typename scalar_t>
-__global__ void backward_pixel_map_cuda_kernel(
+__global__ void backward_pixel_map
+_cuda_kernel(
 		const scalar_t* faces,
         int32_t*  face_index_map,
         scalar_t*  rgb_map,

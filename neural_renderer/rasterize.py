@@ -12,13 +12,20 @@ DEFAULT_FAR = 100
 DEFAULT_EPS = 1e-4
 DEFAULT_BACKGROUND_COLOR = (0, 0, 0)
 
+#当我们在Pytorch中想自定义某一层的梯度计算时，可以利用torch.autograd.Function来封装一个class，
+#此时可以我们可以自己在backward方法中自定求解梯度的方法，也适用于不可导函数的backward计算。
+#ctx是context的缩写, 翻译成"上下文; 环境"，专门用在静态方法中
+#自定义的forward()方法和backward()方法的第一个参数必须是ctx; ctx可以保存forward()中的变量,以便在backward()中继续使用。
+
 class RasterizeFunction(Function):
     '''
     Definition of differentiable rasterize operation
     Some parts of the code are implemented in CUDA
     Currently implemented only for cuda Tensors
+    ctx是context上下文的缩写
     '''
     @staticmethod
+    #静态方法
     def forward(ctx, faces, textures, image_size, near, far, eps, background_color,
                 return_rgb=False, return_alpha=False, return_depth=False):
         '''
@@ -39,7 +46,9 @@ class RasterizeFunction(Function):
         ctx.batch_size, ctx.num_faces = faces.shape[:2]
 
         if ctx.return_rgb:
+            # 当调用contiguous()的时候，会强制拷贝一份tensor，布局和从头创建的一模一样
             textures = textures.contiguous()
+            #shape是张量的属性，返回的是一个tuple维度元组，[2]代表第三维的数量
             ctx.texture_size = textures.shape[2]
         else:
             # initializing with dummy values
@@ -108,6 +117,7 @@ class RasterizeFunction(Function):
                 ctx.saved_tensors
         # initialize output buffers
         # no need for explicit allocation of cuda.FloatTensor because zeros_like does it automatically
+        # torch.zeros()是根据给定张量，生成与其形状相同的全0张量
         grad_faces = torch.zeros_like(faces, dtype=torch.float32)
         if ctx.return_rgb:
             grad_textures = torch.zeros_like(textures, dtype=torch.float32)
@@ -122,6 +132,7 @@ class RasterizeFunction(Function):
                 grad_rgb_map = torch.zeros_like(rgb_map)
         else:
             grad_rgb_map = torch.cuda.FloatTensor(1).fill_(0.0)
+
         if ctx.return_alpha:
             if grad_alpha_map is not None:
                 grad_alpha_map = grad_alpha_map.contiguous()
@@ -129,6 +140,7 @@ class RasterizeFunction(Function):
                 grad_alpha_map = torch.zeros_like(alpha_map)
         else:
             grad_alpha_map = torch.cuda.FloatTensor(1).fill_(0.0)
+
         if ctx.return_depth:
             if grad_depth_map is not None:
                 grad_depth_map = grad_depth_map.contiguous()
@@ -225,8 +237,10 @@ class RasterizeFunction(Function):
                                      face_inv_map, weight_map,
                                      grad_depth_map, grad_faces, ctx.image_size)
 
+#定义自己的网络，需要继承nn.Module类，并实现forward方法，一般把网络中具有可学习参数的层放在构造函数__init__()中
 class Rasterize(nn.Module):
     '''
+    光栅化网络模块，对于Rasterize Function的一个包装
     Wrapper around the autograd function RasterizeFunction
     Currently implemented only for cuda Tensors
     '''
@@ -243,9 +257,11 @@ class Rasterize(nn.Module):
         self.return_alpha = return_alpha
         self.return_depth = return_depth
 
+    #在nn.Module的子类中定义了forward函数，backward函数就会被自动实现（利用Autograd)
     def forward(self, faces, textures):
         if faces.device == "cpu" or (textures is not None and textures.device == "cpu"):
             raise TypeError('Rasterize module supports only cuda Tensors')
+        #使用apply方法调用自定义autograd function
         return RasterizeFunction.apply(faces, textures, self.image_size, self.near, self.far,
                                        self.eps, self.background_color,
                                        self.return_rgb, self.return_alpha, self.return_depth)
@@ -264,6 +280,9 @@ def rasterize_rgbad(
         return_depth=True,
 ):
     """
+    从faces 和 textures中生成RGB、alpha通道和深度图像。返回结果是一个dict
+    alpha通道指的是一张图片的透明和半透明度。
+
     Generate RGB, alpha channel, and depth images from faces and textures (for RGB).
 
     Args:
@@ -345,6 +364,7 @@ def rasterize(
         background_color=DEFAULT_BACKGROUND_COLOR,
 ):
     """
+    从faces和textures中生成RGB图像，对rasterize_rgbad函数调用结果的一个封装，提取了RGB的部分
     Generate RGB images from faces and textures.
 
     Args:
@@ -363,36 +383,6 @@ def rasterize(
     """
     return rasterize_rgbad(
         faces, textures, image_size, anti_aliasing, near, far, eps, background_color, True, False, False)['rgb']
-
-def rasterize(
-        faces,
-        textures,
-        image_size=DEFAULT_IMAGE_SIZE,
-        anti_aliasing=DEFAULT_ANTI_ALIASING,
-        near=DEFAULT_NEAR,
-        far=DEFAULT_FAR,
-        eps=DEFAULT_EPS,
-        background_color=DEFAULT_BACKGROUND_COLOR):
-    """
-    Generate RGB images from faces and textures.
-
-    Args:
-        faces: see `rasterize_rgbad`.
-        textures: see `rasterize_rgbad`.
-        image_size: see `rasterize_rgbad`.
-        anti_aliasing: see `rasterize_rgbad`.
-        near: see `rasterize_rgbad`.
-        far: see `rasterize_rgbad`.
-        eps: see `rasterize_rgbad`.
-        background_color: see `rasterize_rgbad`.
-
-    Returns:
-        ~torch.Tensor: RGB images. The shape is [batch size, 3, image_size, image_size].
-
-    """
-    return rasterize_rgbad(
-        faces, textures, image_size, anti_aliasing, near, far, eps, background_color, True, False, False)['rgb']
-
 
 def rasterize_silhouettes(
         faces,
@@ -403,6 +393,8 @@ def rasterize_silhouettes(
         eps=DEFAULT_EPS,
 ):
     """
+    从faces和textures中生成alpha通道，对rasterize_rgbad函数调用结果的一个封装，提取了aplha的部分
+
     Generate alpha channels from faces.
 
     Args:
@@ -429,6 +421,8 @@ def rasterize_depth(
         eps=DEFAULT_EPS,
 ):
     """
+    从faces中生成深度图像，对rasterize_rgbad函数调用结果的一个封装，提取了深度的部分
+
     Generate depth images from faces.
 
     Args:

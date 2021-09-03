@@ -11,12 +11,14 @@ data_dir = os.path.join(current_dir, 'data')
 
 class TestCore(unittest.TestCase):
     def test_save_obj(self):
+        #os.path.join()函数用于路径拼接文件路径
         teapot = os.path.join(data_dir, 'teapot.obj')
         teapot2 = os.path.join(data_dir, 'teapot2.obj')
         vertices, faces = nr.load_obj(teapot)
         nr.save_obj(teapot2, vertices, faces)
         vertices2, faces2 = nr.load_obj(teapot2)
         os.remove(teapot2)
+        #torch.allclose 比较两个元素是否接近
         assert torch.allclose(vertices, vertices2)
         assert torch.allclose(faces, faces2)
 

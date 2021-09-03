@@ -6,6 +6,7 @@ import torch.nn.functional as F
 def look_at(vertices, eye, at=[0, 0, 0], up=[0, 1, 0]):
     """
     "Look at" transformation of vertices.
+    lookat矩阵变换使得无论我们怎么移动，摄像机都会注视着目标方向。
     """
     if (vertices.ndimension() != 3):
         raise ValueError('vertices Tensor should have 3 dimensions')

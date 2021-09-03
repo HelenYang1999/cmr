@@ -2,14 +2,15 @@ from __future__ import division
 
 import torch
 
-
+#投影
 def projection(vertices, K, R, t, dist_coeffs, orig_size, eps=1e-9):
     '''
+    在给定投影矩阵的情况下计算顶点的投影变换，返回世界坐标中的点(x,y,z)经过投影变换后的坐标（u,v,z)其中，u和v是像素点的坐标，z是深度。
     Calculate projective transformation of vertices given a projection matrix
     Input parameters:
-    K: batch_size * 3 * 3 intrinsic camera matrix
-    R, t: batch_size * 3 * 3, batch_size * 1 * 3 extrinsic calibration parameters
-    dist_coeffs: vector of distortion coefficients
+    K: batch_size * 3 * 3 intrinsic camera matrix 内部摄像机参数
+    R, t: batch_size * 3 * 3, batch_size * 1 * 3 extrinsic calibration parameters 外部校准参数
+    dist_coeffs: vector of distortion coefficients 失真系数向量
     orig_size: original size of image captured by the camera
     Returns: For each point [X,Y,Z] in world coordinates [u,v,z] where u,v are the coordinates of the projection in
     pixels and z is the depth

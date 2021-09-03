@@ -48,6 +48,7 @@ def save_obj(filename, vertices, faces, textures=None):
         texture_image, vertices_textures = create_texture_image(textures)
         imsave(filename_texture, texture_image)
 
+    #detach()返回一个新的tensor，新的tensor和原来的tensor共享数据内存，但不涉及梯度计算
     faces = faces.detach().cpu().numpy()
 
     with open(filename, 'w') as f:

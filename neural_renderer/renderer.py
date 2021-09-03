@@ -7,8 +7,27 @@ import numpy
 
 import neural_renderer as nr
 
-
 class Renderer(nn.Module):
+    """
+    渲染网络模块
+
+    Args:
+        image_size图像大小、
+        anti_aliasing是否反走样、
+        background_color背景颜色[0,0,0]代表全黑
+        fill_back未知、
+        camera_mode相机模式，具体含义未知、
+        dist_coeffs 畸变矩阵、
+        orig_size原本大小
+        perspective是否透视、
+        viewing_angle观察角、
+        camera_direction相机方向、
+        near近平面、
+        far远平面
+        light_intensity_ambient 环境光强度、light_intensity_directional 平行光强度(定向光源）
+        light_color_ambient 环境光颜色、light_color_directional平行光颜色
+        light_direction
+    """
     def __init__(self, image_size=256, anti_aliasing=True, background_color=[0,0,0],
                  fill_back=True, camera_mode='look_at',
                  K=None, R=None, t=None, dist_coeffs=None, orig_size=1024,
@@ -197,6 +216,7 @@ class Renderer(nn.Module):
             self.background_color)
         return images
 
+    #这几段代码都没啥太大的区别
     def render(self, vertices, faces, textures, K=None, R=None, t=None, dist_coeffs=None, orig_size=None):
         # fill back
         if self.fill_back:

@@ -1,20 +1,27 @@
 # Blender v2.71 (sub 0) OBJ File: 'blank.blend'
 # www.blender.org
+#obj文件对应的材质文件
 mtllib model.mtl
+#o 对象名称
 o mesh10.001_mesh10-geometry
 o mesh9.001_mesh9-geometry
 o mesh8.001_mesh8-geometry
 o mesh7.001_mesh7-geometry
+#v 顶点
 v 0.00967803 -0.0908229 -0.0254564
 v 0.00967803 -0.0908229 0.0254564
 v 0.00967803 -0.0814804 -0.0254564
 v 0.00967803 -0.0814804 0.0254564
+#vt 纹理坐标
 vt 0.000000 0.000000
 vt 1.000000 0.000000
 vt 0.000000 1.000000
 vt 1.000000 1.000000
+#当前所用材质
 usemtl material_3_1_0
+#禁用平滑着色
 s off
+#f表示一个面
 f 1/1 2/2 3/3
 f 1/1 3/3 2/2
 f 4/4 3/3 2/2

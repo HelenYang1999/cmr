@@ -28,6 +28,7 @@ def main():
     texture_size = 2
 
     # load .obj
+    #没有纹理
     vertices, faces = nr.load_obj(args.filename_input)
     vertices = vertices[None, :, :]  # [num_vertices, XYZ] -> [batch_size=1, num_vertices, XYZ]
     faces = faces[None, :, :]  # [num_faces, 3] -> [batch_size=1, num_faces, 3]

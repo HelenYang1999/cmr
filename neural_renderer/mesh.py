@@ -5,6 +5,7 @@ import neural_renderer as nr
 
 class Mesh(object):
     '''
+    用于创建和操作三角网格对象的简单类
     A simple class for creating and manipulating trimesh objects
     '''
     def __init__(self, vertices, faces, textures=None, texture_size=4):
@@ -25,6 +26,7 @@ class Mesh(object):
             self.texture_size = textures.shape[0]
 
     @classmethod
+    # 类方法，所有类的对象共用的，cls表示类本身，应该是class的缩写
     def fromobj(cls, filename_obj, normalization=True, load_texture=False, texture_size=4):
         '''
         Create a Mesh object from a .obj file

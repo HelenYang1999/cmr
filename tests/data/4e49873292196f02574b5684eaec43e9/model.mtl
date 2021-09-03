@@ -1,6 +1,6 @@
 # Blender MTL File: 'blank.blend'
 # Material Count: 7
-
+#定义一个名为material_0_24的材质
 newmtl material_0_24
 Ns 96.078431
 Ka 0.000000 0.000000 0.000000

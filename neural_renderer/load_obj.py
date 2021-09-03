@@ -39,6 +39,7 @@ def load_textures(filename_obj, filename_mtl, texture_size, texture_wrapping='RE
             continue
         if line.split()[0] == 'vt':
             vertices.append([float(v) for v in line.split()[1:3]])
+    #vertices原先是一个list，后来通过在竖直方向上堆叠变成numpy
     vertices = np.vstack(vertices).astype(np.float32)
 
     # load faces for textures
@@ -65,10 +66,12 @@ def load_textures(filename_obj, filename_mtl, texture_size, texture_wrapping='RE
                 else:
                     v2 = 0
                 faces.append((v0, v1, v2))
-                material_names.append(material_name)
+                material_names.append(material_name) #material_names保存了每个面对应的材质
         if line.split()[0] == 'usemtl':
             material_name = line.split()[1]
+    #faces是每个面的三个顶点对应的贴图uv索引 有54293个面，vertices保存了所有顶点对应的贴图nv坐标，有131822个点
     faces = np.vstack(faces).astype(np.int32) - 1
+    #每个面三个顶点分别对应的uv坐标
     faces = vertices[faces]
     faces = torch.from_numpy(faces).cuda()
 
@@ -121,6 +124,7 @@ def load_obj(filename_obj, normalization=True, texture_size=4, load_texture=Fals
         if len(line.split()) == 0:
             continue
         if line.split()[0] == 'v':
+            #从下标1开始截取3个元素
             vertices.append([float(v) for v in line.split()[1:4]])
     vertices = torch.from_numpy(np.vstack(vertices).astype(np.float32)).cuda()
 
@@ -152,7 +156,10 @@ def load_obj(filename_obj, normalization=True, texture_size=4, load_texture=Fals
             raise Exception('Failed to load textures.')
 
     # normalize into a unit cube centered zero
+    # 正则化到一个 中心为零的单元立方体
     if normalization:
+        #min函数返回Tuple[Tensor, Tensor]，两个一维tensor,每个tensor有三个元素，第一个tensor代表最小值，第二个代表对应的索引值。
+        #参数0代表指定维度，即1292个顶点中的最小值
         vertices -= vertices.min(0)[0][None, :]
         vertices /= torch.abs(vertices).max()
         vertices *= 2
